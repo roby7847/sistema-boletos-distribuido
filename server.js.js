@@ -6,24 +6,24 @@ const path = require('path');
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Estado global: 12 asientos disponibles
+// Estado global: 12 asientos
 let asientos = Array(12).fill(false); 
 
 io.on('connection', (socket) => {
-    // Enviar estado actual al conectar
     socket.emit('actualizar', asientos);
 
+    // Lógica para ocupar/liberar
     socket.on('reservar', (index) => {
-        // Lógica de Exclusión Mutua (Sistemas Distribuidos)
-        if (!asientos[index]) {
-            asientos[index] = true; 
-            // Paso de mensajes a todos los usuarios
-            io.emit('actualizar', asientos); 
-        } else {
-            socket.emit('error_concurrencia', '¡Demasiado tarde! Alguien más lo reservó.');
-        }
+        asientos[index] = !asientos[index]; // Cambia el estado (Toggle)
+        io.emit('actualizar', asientos); 
+    });
+
+    // Lógica para limpiar todo el tablero
+    socket.on('limpiar_todo', () => {
+        asientos = Array(12).fill(false);
+        io.emit('actualizar', asientos);
     });
 });
 
 const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => console.log('Servidor activo en puerto ' + PORT));
+http.listen(PORT, () => console.log('Servidor listo'));
