@@ -3,57 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reserva Pro | TI UIEPA</title>
+    <title>Cine| UIEPA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Inter', sans-serif; } </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-900 min-h-screen text-slate-200">
 
-    <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200">
-        <div class="bg-gradient-to-r from-blue-700 to-indigo-600 p-6 text-white text-center">
-            <h1 class="text-2xl font-bold tracking-tight">CineSync Pro</h1>
-            <p class="text-blue-100 text-xs mt-1 uppercase tracking-widest">Sistemas Distribuidos</p>
-        </div>
-
-        <div class="p-8 text-center">
-            <div class="w-full h-1 bg-gray-300 rounded-full mb-8 relative">
-                <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-gray-400 text-center uppercase">Pantalla</span>
+    <div id="login-screen" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-4">
+        <div class="max-w-sm w-full bg-slate-800 p-8 rounded-3xl border border-slate-700 shadow-2xl text-center">
+            <div class="w-20 h-20 bg-blue-600 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <i class="fas fa-ticket-alt text-3xl text-white"></i>
             </div>
-
-            <div id="grid-asientos" class="grid grid-cols-4 gap-3 mb-8">
-                </div>
-
-            <button onclick="reiniciar()" class="w-full py-3 bg-slate-800 hover:bg-black text-white rounded-xl font-bold text-sm transition-all shadow-lg active:scale-95 mb-6">
-                REINICIAR TABLERO
+            <h2 class="text-2xl font-bold mb-2">Bienvenido</h2>
+            <p class="text-slate-400 text-sm mb-6">Ingresa tu nombre para acceder al sistema distribuido</p>
+            <input type="text" id="username" placeholder="Tu nombre..." class="w-full bg-slate-700 border-none rounded-xl p-4 text-white placeholder-slate-500 mb-4 focus:ring-2 focus:ring-blue-500 outline-none">
+            <button onclick="entrar()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-bold transition-all transform active:scale-95">
+                ACCEDER AL PANEL
             </button>
-
-            <div class="flex justify-center gap-6 text-[10px] font-bold text-gray-400 border-t pt-6">
-                <div class="flex items-center gap-2"><div class="w-3 h-3 bg-emerald-500 rounded-sm"></div> LIBRE</div>
-                <div class="flex items-center gap-2"><div class="w-3 h-3 bg-rose-500 rounded-sm"></div> OCUPADO</div>
-            </div>
         </div>
+    </div>
+
+    <div id="main-panel" class="hidden flex flex-col md:flex-row h-screen overflow-hidden">
+        
+        <aside class="w-full md:w-64 bg-slate-800 p-6 flex flex-col border-r border-slate-700">
+            <div class="flex items-center gap-3 mb-10">
+                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center"><i class="fas fa-microchip"></i></div>
+                <span class="font-bold tracking-tight text-xl text-white">CineUiepa</span>
+            </div>
+
+            <nav class="flex-1 space-y-2">
+                <div class="text-[10px] uppercase text-slate-500 font-bold mb-4 tracking-widest">Estadísticas</div>
+                <div class="bg-slate-700/50 p-4 rounded-2xl border border-slate-600">
+                    <p class="text-xs text-slate-400 mb-1">Tu Usuario</p>
+                    <p id="display-name" class="font-bold text-blue-400">---</p>
+                </div>
+                <div class="bg-slate-700/50 p-4 rounded-2xl border border-slate-600">
+                    <p class="text-xs text-slate-400 mb-1">Asientos Libres</p>
+                    <p id="count-libres" class="font-bold text-emerald-400">0</p>
+                </div>
+            </nav>
+
+            <button onclick="reiniciar()" class="mt-auto bg-rose-600/10 hover:bg-rose-600 text-rose-500 hover:text-white p-4 rounded-2xl font-bold transition-all text-sm flex items-center justify-center gap-2">
+                <i class="fas fa-trash-alt"></i> RESETEAR TODO
+            </button>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto p-8 bg-slate-900">
+            <div class="max-w-2xl mx-auto">
+                <header class="mb-10">
+                    <h1 class="text-3xl font-bold text-white mb-2">Panel de Control</h1>
+                    <p class="text-slate-400">Selecciona los asientos disponibles en tiempo real.</p>
+                </header>
+
+                <div class="bg-slate-800 p-10 rounded-[3rem] border border-slate-700 shadow-xl relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                    
+                    <div class="w-full h-2 bg-slate-700 rounded-full mb-12 shadow-[0_0_20px_rgba(59,130,246,0.3)]"></div>
+
+                    <div id="grid-asientos" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        </div>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script>
         const socket = io();
-        const grid = document.getElementById('grid-asientos');
+        let miNombre = "";
+
+        function entrar() {
+            const input = document.getElementById('username');
+            if(input.value.trim().length < 3) return alert("Nombre muy corto");
+            miNombre = input.value.trim();
+            document.getElementById('display-name').innerText = miNombre;
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-panel').classList.remove('hidden');
+        }
 
         socket.on('actualizar', (asientos) => {
+            const grid = document.getElementById('grid-asientos');
             grid.innerHTML = '';
-            asientos.forEach((ocupado, i) => {
+            let libres = 0;
+
+            asientos.forEach((ocupante, i) => {
+                if(!ocupante) libres++;
                 const btn = document.createElement('button');
-                btn.className = `h-12 rounded-xl font-bold transition-all duration-200 shadow-sm
-                    ${ocupado ? 'bg-rose-500 text-white shadow-inner' : 'bg-emerald-500 hover:bg-emerald-600 text-white hover:scale-105 active:scale-95'}`;
-                btn.innerText = ocupado ? '✕' : i + 1;
-                btn.onclick = () => { socket.emit('reservar', i); };
+                btn.className = `group relative h-20 rounded-2xl transition-all duration-300 flex flex-col items-center justify-center gap-1 border-2 
+                    ${ocupante 
+                        ? (ocupante === miNombre ? 'bg-blue-600 border-blue-400 shadow-lg scale-95' : 'bg-slate-800 border-rose-500 opacity-60 cursor-not-allowed') 
+                        : 'bg-slate-800 border-slate-700 hover:border-emerald-500 hover:scale-105 shadow-lg shadow-black/20'}`;
+                
+                btn.innerHTML = `
+                    <span class="text-xs font-bold ${ocupante ? 'text-white' : 'text-slate-500'}">${i + 1}</span>
+                    <i class="fas ${ocupante ? (ocupante === miNombre ? 'fa-user-check' : 'fa-lock') : 'fa-plus'} text-lg"></i>
+                    ${ocupante ? `<span class="text-[8px] uppercase font-bold truncate px-2">${ocupante}</span>` : ''}
+                `;
+                
+                btn.onclick = () => { socket.emit('reservar', { index: i, usuario: miNombre }); };
                 grid.appendChild(btn);
             });
+
+            document.getElementById('count-libres').innerText = libres;
         });
 
         function reiniciar() {
-            if(confirm('¿Quieres limpiar todos los asientos?')) {
+            if(confirm('¿Deseas resetear el servidor distribuido?')) {
                 socket.emit('limpiar_todo');
             }
         }
