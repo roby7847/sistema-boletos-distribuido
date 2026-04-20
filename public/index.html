@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva Pro | TI UIEPA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Inter', sans-serif; } </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200">
+        <div class="bg-gradient-to-r from-blue-700 to-indigo-600 p-6 text-white text-center">
+            <h1 class="text-2xl font-bold tracking-tight">CineSync Pro</h1>
+            <p class="text-blue-100 text-xs mt-1 uppercase tracking-widest">Sistemas Distribuidos</p>
+        </div>
+
+        <div class="p-8 text-center">
+            <div class="w-full h-1 bg-gray-300 rounded-full mb-8 relative">
+                <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-gray-400">PANTALLA</span>
+            </div>
+
+            <div id="grid-asientos" class="grid grid-cols-4 gap-3 mb-8">
+                </div>
+
+            <div class="flex justify-center gap-6 text-[10px] font-bold text-gray-400 border-t pt-6">
+                <div class="flex items-center gap-2"><div class="w-3 h-3 bg-emerald-500 rounded-sm"></div> LIBRE</div>
+                <div class="flex items-center gap-2"><div class="w-3 h-3 bg-rose-500 rounded-sm"></div> OCUPADO</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const grid = document.getElementById('grid-asientos');
+
+        socket.on('actualizar', (asientos) => {
+            grid.innerHTML = '';
+            asientos.forEach((ocupado, i) => {
+                const btn = document.createElement('button');
+                btn.className = `h-12 rounded-xl font-bold transition-all duration-200 shadow-sm
+                    ${ocupado ? 'bg-rose-500 text-white cursor-not-allowed scale-95' : 'bg-emerald-500 hover:bg-emerald-600 text-white hover:scale-105 active:scale-95'}`;
+                btn.innerText = ocupado ? '✕' : i + 1;
+                btn.onclick = () => { if(!ocupado) socket.emit('reservar', i); };
+                grid.appendChild(btn);
+            });
+        });
+
+        socket.on('error_concurrencia', (msg) => { alert(msg); });
+    </script>
+</body>
+</html>
