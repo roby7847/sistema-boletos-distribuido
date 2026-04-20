@@ -19,11 +19,15 @@
 
         <div class="p-8 text-center">
             <div class="w-full h-1 bg-gray-300 rounded-full mb-8 relative">
-                <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-gray-400">PANTALLA</span>
+                <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-gray-400 text-center uppercase">Pantalla</span>
             </div>
 
             <div id="grid-asientos" class="grid grid-cols-4 gap-3 mb-8">
                 </div>
+
+            <button onclick="reiniciar()" class="w-full py-3 bg-slate-800 hover:bg-black text-white rounded-xl font-bold text-sm transition-all shadow-lg active:scale-95 mb-6">
+                REINICIAR TABLERO
+            </button>
 
             <div class="flex justify-center gap-6 text-[10px] font-bold text-gray-400 border-t pt-6">
                 <div class="flex items-center gap-2"><div class="w-3 h-3 bg-emerald-500 rounded-sm"></div> LIBRE</div>
@@ -41,14 +45,18 @@
             asientos.forEach((ocupado, i) => {
                 const btn = document.createElement('button');
                 btn.className = `h-12 rounded-xl font-bold transition-all duration-200 shadow-sm
-                    ${ocupado ? 'bg-rose-500 text-white cursor-not-allowed scale-95' : 'bg-emerald-500 hover:bg-emerald-600 text-white hover:scale-105 active:scale-95'}`;
+                    ${ocupado ? 'bg-rose-500 text-white shadow-inner' : 'bg-emerald-500 hover:bg-emerald-600 text-white hover:scale-105 active:scale-95'}`;
                 btn.innerText = ocupado ? '✕' : i + 1;
-                btn.onclick = () => { if(!ocupado) socket.emit('reservar', i); };
+                btn.onclick = () => { socket.emit('reservar', i); };
                 grid.appendChild(btn);
             });
         });
 
-        socket.on('error_concurrencia', (msg) => { alert(msg); });
+        function reiniciar() {
+            if(confirm('¿Quieres limpiar todos los asientos?')) {
+                socket.emit('limpiar_todo');
+            }
+        }
     </script>
 </body>
 </html>
